@@ -1,7 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-GDB_VERSION_LIST = ()
+import os, re, shutil
+
+GDB_VERSION_LIST = ("6.0", "6.1.1", "6.2.1", "6.3", "6.4", "6.5", "6.6",
+		    "6.7", "6.7.1", "6.8", "7.0.1", "7.1", "7.2", "7.3.1",
+		    "7.4.1", "7.5.1", "7.6.2", "7.7.1")
+GDB_VERSION_HAVE_A = 7.2
 
 class Lang(object):
     '''Language class.'''
@@ -9,12 +14,12 @@ class Lang(object):
         self.data = {}
         self.language = language
         self.is_set = False
-        self.add('Please install "%s" before go to next step.',
-                 '在进行下一步以前请先安装软件包"%s"。')
+        self.add("Which version of GDB do you want to install?",
+                 "你要安装哪个版本的GDB?")
 
     def set_language(self, language):
         if language != "":
-	    if self.language[0] == "e" or self.language[0] == "E":
+	    if language[0] == "e" or language[0] == "E":
 		self.language = "en"
 	    else:
 	        self.language = "cn"
@@ -56,6 +61,251 @@ def select_from_list(entry_list, default_entry, introduction):
             break
     return entry_list[select]
 
+def yes_no(string="", has_default=False, default_answer=True):
+    if has_default:
+        if default_answer:
+            default_str = " [Yes]/No:"
+        else:
+            default_str = " Yes/[No]:"
+    else:
+        default_str = " Yes/No:"
+    while True:
+        s = raw_input(string + default_str)
+        if len(s) == 0:
+            if has_default:
+                return default_answer
+            continue
+        if s[0] == "n" or s[0] == "N":
+            return False
+        if s[0] == "y" or s[0] == "Y":
+            return True
+
+def get_distro():
+    if os.path.exists("/etc/redhat-release"):
+        return "Redhat"
+
+    try:
+        fp = open("/etc/issue", "r")
+        version = fp.readline().lower()
+        fp.close()
+        if re.match('.*ubuntu.*', version):
+            return "Ubuntu"
+        elif re.match('.*opensuse.*', version):
+	    return "openSUSE"
+    except:
+        pass
+
+    return "Other"
+
+def get_cmd(cmd, first=True):
+    f = os.popen(cmd)
+    if first:
+        v = f.readline().rstrip()
+    else:
+        v = f.readlines()
+    f.close()
+    return v
+
+def call_cmd(cmd, fail_str="", chdir="", outside_retry=False):
+    '''
+    Return True if call cmd success.
+    '''
+    if fail_str == "":
+        fail_str = lang.string('Call command "%s" failed. ') %cmd
+    if chdir != "":
+        os.chdir(chdir)
+    while True:
+        ret = os.system(cmd)
+        if ret == 0:
+            break
+        retry(fail_str, ret)
+        if outside_retry:
+            return False
+
+    return True
+
+def get_gdb_version(gdb):
+    try:
+        v = get_cmd(gdb + " -v")
+    except:
+        return -1
+    if not re.match(r'^GNU gdb (.+) \d+\.\d+.*$', v):
+        return -1
+
+    return float(re.search(r'\d+\.\d+', v).group())
+
+def get_source_version(distro, name):
+    if distro == "Redhat":
+        try:
+            v = get_cmd("yum list " + name, False)
+        except:
+            return 0
+        if len(v) <= 0:
+            return 0
+        v = v[-1]
+    elif distro == "Ubuntu":
+        try:
+            v = get_cmd("apt-get -qq changelog " + name)
+        except:
+            return 0
+    elif distro == "openSUSE":
+        try:
+            v = get_cmd("zypper info " + name, False)
+        except:
+            return 0
+    else:
+        return 0
+
+    if distro == "openSUSE":
+	got_name = False
+	got_version = False
+	for line in v:
+	    if got_name and re.match('^Version: ', line):
+		got_version = True
+		v = line
+		break
+	    if re.match('^Name: '+name, line):
+		got_name = True
+    elif not re.match('^'+name, v):
+        return 0
+
+    return float(re.search(r'\d+\.\d+', v).group())
+
+def install_packages(distro, packages, auto=False):
+    #Remove the package that doesn't need install from packages
+    if distro != "Other":
+        tmp_packages = []
+        for i in range(0, len(packages)):
+            ret = 1
+            if distro == "Redhat" or distro == "openSUSE":
+                ret = os.system("rpm -q " + packages[i])
+            elif distro == "Ubuntu":
+                ret = os.system("dpkg -s " + packages[i])
+            if ret != 0:
+                tmp_packages.append(packages[i])
+        packages = tmp_packages
+    if len(packages) == 0:
+        return
+
+    packages = " ".join(packages)
+    while True:
+        ret = 0
+        if distro == "Redhat":
+            ret = os.system("yum -y install " + packages)
+        elif distro == "Ubuntu":
+            ret = os.system("apt-get -y --force-yes install " + packages)
+        elif distro == "openSUSE":
+	    ret = os.system("zypper -n install --oldpackage " + packages)
+        else:
+            if auto:
+                return
+            while True:
+                print(lang.string('Please install \"%s\" before go to next step.') %packages)
+                s = raw_input(lang.string('Input "y" and press "Enter" to continue'))
+                if len(s) > 0 and (s[0] == 'y' or s[0] == "Y"):
+                    return
+
+        if ret == 0:
+            break
+        else:
+            retry(lang.string("Install packages failed."), ret)
+
+def input_dir(msg, default=""):
+    if default != "":
+	default_str = '[' + default + ']'
+    else
+        default_str = ''
+    while True:
+        ret_dir = raw_input(msg + default_str)
+	if ret_dir == "":
+	    ret_dir = default
+	if ret_dir == "":
+	    continue
+	if not os.path.isdir(ret_dir):
+            print(lang.string('"%s" is not right.') %ret_dir)
+            continue
+        return os.path.realpath(ret_dir)
+
 lang = Lang()
 lang.set_language(select_from_list(("English", "Chinese"), "", "Which language do you want to use?"))
 
+distro = get_distro()
+if distro != "Other":
+    print(lang.string('Current system is "%s".') %distro)
+else:
+    print(lang.string("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com."))
+
+install_version = select_from_list(GDB_VERSION_LIST, "7.7.1", lang.string("Which version of GDB do you want to install?"))
+install_version_f = float(install_version[0:3])
+
+if not not yes_no(lang.string("Get from source without check GDB in current machine?"), True, False):
+    if distro == "Other":
+        install_packages(distro, ["gdb"])
+
+    while True:
+        #Find GDB from PATH
+        for p in os.environ.get("PATH").split(':'):
+            if os.path.isfile(p + "/gdb") and get_gdb_version(p + "/gdb") >= install_version_f:
+                print(lang.string('GDB in "%s" is OK for use.') %(p + "/gdb"))
+                exit(0)
+
+        #Try to install GDB from software source
+        if distro != "Other":
+            print(lang.string("Check the software source..."))
+            version = get_source_version(distro, "gdb")
+            if version >= install_version_f:
+                print lang.string("Install GDB...")
+                install_packages(distro, ["gdb"])
+                continue
+            else:
+                print (lang.string('GDB in software source is older than "%s".') %install_version)
+
+#Install GDB from source code
+print lang.string("Get, build and install a GDB ...")
+if yes_no(lang.string("Do you want to install GDB after it is built?"), True):
+    install_dir = input_dir(lang.string("Please input the PREFIX directory that you want to install(GDB will be installed to PREFIX/bin/):"), "/usr/local/")
+else:
+    install_dir = ""
+
+if distro == "Ubuntu":
+    install_packages(distro, ["gcc", "texinfo", "m4", "flex", "bison",
+			      "libncurses5-dev", "libexpat1-dev",
+			      "python-dev", "wget"])
+elif distro == "openSUSE":
+    install_packages(distro, ["gcc", "texinfo", "m4", "flex",
+                              "bison","ncurses-devel", "libexpat-devel",
+                              "python-devel", "wget","make"])
+else:
+    install_packages(distro, ["gcc", "texinfo", "m4", "flex",
+                              "bison","ncurses-devel", "expat-devel",
+                              "python-devel", "wget"])
+
+build_dir = input_dir("Please input the directory that you want to build GDB:", os.getcwd())
+os.chdir(build_dir)
+while True:
+    shutil.rmtree("gdb-" + install_version + ".tar.bz2", True)
+    shutil.rmtree("gdb-" + install_version + "/", True)
+    if not call_cmd("wget http://ftp.gnu.org/gnu/gdb/" + "gdb-" + install_version + ".tar.bz2", lang.string("Download GDB source package failed."), "", True):
+        continue
+    if not call_cmd("tar vxjf " + "gdb-" + install_version + ".tar.bz2" + " -C ./", lang.string("Uncompress GDB source package failed."), "", True):
+        continue
+    shutil.rmtree("gdb-" + install_version + ".tar.bz2", True)
+    if install_dir == "":
+	config_cmd = "./configure --disable-sid --disable-rda --disable-gdbtk --disable-tk --disable-itcl --disable-tcl --disable-libgui --disable-ld --disable-gas --disable-binutils --disable-gprof --with-gdb-datadir=" + build_dir + "/gdb-" + install_version + "/" + "/gdb/data-directory/"
+    else
+        config_cmd = "./configure --prefix=" + install_dir +" --disable-sid --disable-rda --disable-gdbtk --disable-tk --disable-itcl --disable-tcl --disable-libgui --disable-ld --disable-gas --disable-binutils --disable-gprof"
+    if not call_cmd(config_cmd, lang.string("Config GDB failed."), build_dir + "/gdb-" + install_version + "/", True):
+        continue
+    if not call_cmd("make all", lang.string("Build GDB failed."), build_dir + "/gdb-" + install_version + "/", True):
+        continue
+    if install_dir:
+	if not os.access(install_dir, os.W_OK):
+	    sudo_cmd = "sudo"
+	else:
+	    sudo_cmd = ""
+        if not call_cmd(sudo_cmd + "make all", lang.string("Install GDB failed."),build_dir + "/gdb-" + install_version + "/", True):
+            continue
+        print(lang.string('GDB %s is available in "%s".'), %(install_version, install_dir + "/bin/gdb"))
+    else
+        print(lang.string('GDB %s is available in "%s".'), %(install_version, build_dir + "/gdb-" + install_version + "/gdb/gdb"))
+    break
