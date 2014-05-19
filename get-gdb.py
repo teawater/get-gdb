@@ -3,7 +3,7 @@
 
 import os, re, shutil
 
-GDB_VERSION_LIST = ("6.0", "6.1.1", "6.2.1", "6.3", "6.4", "6.5", "6.6",
+GDB_VERSION_LIST = ("6.1.1", "6.2.1", "6.3", "6.4", "6.5", "6.6",
 		    "6.7", "6.7.1", "6.8", "7.0.1", "7.1", "7.2", "7.3.1",
 		    "7.4.1", "7.5.1", "7.6.2", "7.7.1")
 GDB_VERSION_HAVE_A = 7.2
@@ -14,8 +14,48 @@ class Lang(object):
         self.data = {}
         self.language = language
         self.is_set = False
+        self.add('Call command "%s" failed. ',
+                 '调用命令"%s"失败。 ')
+        self.add('Please install "%s" before go to next step.',
+                 '在进行下一步以前请先安装软件包"%s"。')
+        self.add('Input "y" and press "Enter" to continue',
+                 '输入"y"后按回车键继续')
+        self.add("Install packages failed.",
+                 "安装包失败。")
+	self.add('"%s" is not right.',
+                 '"%s"不正确。')
+	self.add('Current system is "%s".',
+                 '当前系统是"%s".')
+	self.add("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.",
+                 "当前系统还没有被支持，需要手动执行一些命令。\n如果你希望KGTP支持你的系统，请汇报这个到 https://github.com/teawater/kgtp/issues 或者 teawater@gmail.com。")
         self.add("Which version of GDB do you want to install?",
                  "你要安装哪个版本的GDB?")
+	self.add("Build from source without check GDB in current system?",
+                 "不检查当前系统，直接从源码编译GDB？")
+	self.add('GDB in "%s" is OK for use.',
+                 '在"%s"中的GDB可用。')
+	self.add('GDB in software source is older than "%s".',
+                 '软件源中的GDB比"%s"老。')
+	self.add("Build and install GDB ...",
+                 "编译和安装GDB...")
+	self.add("Do you want to install GDB after it is built?",
+                 "需要在编译GDB后安装它吗？")
+	self.add("Please input the PREFIX directory that you want to install(GDB will be installed to PREFIX/bin/):",
+                 "请输入安装的PREFIX目录（GDB将被安装在 PREFIX/bin/ 目录中）：")
+	self.add("Please input the directory that you want to build GDB:",
+                 '请输入编译GDB的目录：')
+	self.add("Download GDB source package failed.",
+                 '下载GDB源码包失败。')
+	self.add("Uncompress GDB source package failed.",
+                 '解压缩GDB源码包失败。')
+	self.add("Config GDB failed.",
+                 "配置GDB失败。")
+	self.add("Build GDB failed.",
+                 "编译GDB失败。")
+	self.add("Install GDB failed.",
+                 "安装GDB失败。")
+	self.add('GDB %s is available in "%s".',
+                 'GDB %s在"%s"。')
 
     def set_language(self, language):
         if language != "":
@@ -105,6 +145,14 @@ def get_cmd(cmd, first=True):
         v = f.readlines()
     f.close()
     return v
+
+def retry(string="", ret=-1):
+    while True:
+        s = raw_input(string + lang.string(" [Retry]/Exit:"))
+        if len(s) == 0 or s[0] == 'r' or s[0] == 'R':
+            break
+        if s[0] == "E" or s[0] == "e":
+            exit(ret)
 
 def call_cmd(cmd, fail_str="", chdir="", outside_retry=False):
     '''
@@ -213,7 +261,7 @@ def install_packages(distro, packages, auto=False):
 def input_dir(msg, default=""):
     if default != "":
 	default_str = '[' + default + ']'
-    else
+    else:
         default_str = ''
     while True:
         ret_dir = raw_input(msg + default_str)
@@ -237,8 +285,12 @@ else:
 
 install_version = select_from_list(GDB_VERSION_LIST, "7.7.1", lang.string("Which version of GDB do you want to install?"))
 install_version_f = float(install_version[0:3])
+if install_version_f > GDB_VERSION_HAVE_A:
+    gdb_name = "gdb-" + install_version + ".tar.bz2"
+else:
+    gdb_name = "gdb-" + install_version + "a.tar.bz2"
 
-if not not yes_no(lang.string("Get from source without check GDB in current machine?"), True, False):
+if not yes_no(lang.string("Build from source without check GDB in current system?"), True, False):
     if distro == "Other":
         install_packages(distro, ["gdb"])
 
@@ -254,14 +306,13 @@ if not not yes_no(lang.string("Get from source without check GDB in current mach
             print(lang.string("Check the software source..."))
             version = get_source_version(distro, "gdb")
             if version >= install_version_f:
-                print lang.string("Install GDB...")
                 install_packages(distro, ["gdb"])
                 continue
             else:
                 print (lang.string('GDB in software source is older than "%s".') %install_version)
 
 #Install GDB from source code
-print lang.string("Get, build and install a GDB ...")
+print lang.string("Build and install GDB ...")
 if yes_no(lang.string("Do you want to install GDB after it is built?"), True):
     install_dir = input_dir(lang.string("Please input the PREFIX directory that you want to install(GDB will be installed to PREFIX/bin/):"), "/usr/local/")
 else:
@@ -280,19 +331,19 @@ else:
                               "bison","ncurses-devel", "expat-devel",
                               "python-devel", "wget"])
 
-build_dir = input_dir("Please input the directory that you want to build GDB:", os.getcwd())
+build_dir = input_dir(lang.string("Please input the directory that you want to build GDB:"), os.getcwd())
 os.chdir(build_dir)
 while True:
-    shutil.rmtree("gdb-" + install_version + ".tar.bz2", True)
-    shutil.rmtree("gdb-" + install_version + "/", True)
-    if not call_cmd("wget http://ftp.gnu.org/gnu/gdb/" + "gdb-" + install_version + ".tar.bz2", lang.string("Download GDB source package failed."), "", True):
+    shutil.rmtree(build_dir + "/" + gdb_name, True)
+    shutil.rmtree(build_dir + "gdb-" + install_version + "/", True)
+    if not call_cmd("wget http://ftp.gnu.org/gnu/gdb/" + gdb_name, lang.string("Download GDB source package failed."), "", True):
         continue
-    if not call_cmd("tar vxjf " + "gdb-" + install_version + ".tar.bz2" + " -C ./", lang.string("Uncompress GDB source package failed."), "", True):
+    if not call_cmd("tar vxjf " + gdb_name + " -C ./", lang.string("Uncompress GDB source package failed."), "", True):
         continue
-    shutil.rmtree("gdb-" + install_version + ".tar.bz2", True)
+    shutil.rmtree(gdb_name, True)
     if install_dir == "":
 	config_cmd = "./configure --disable-sid --disable-rda --disable-gdbtk --disable-tk --disable-itcl --disable-tcl --disable-libgui --disable-ld --disable-gas --disable-binutils --disable-gprof --with-gdb-datadir=" + build_dir + "/gdb-" + install_version + "/" + "/gdb/data-directory/"
-    else
+    else:
         config_cmd = "./configure --prefix=" + install_dir +" --disable-sid --disable-rda --disable-gdbtk --disable-tk --disable-itcl --disable-tcl --disable-libgui --disable-ld --disable-gas --disable-binutils --disable-gprof"
     if not call_cmd(config_cmd, lang.string("Config GDB failed."), build_dir + "/gdb-" + install_version + "/", True):
         continue
@@ -305,7 +356,7 @@ while True:
 	    sudo_cmd = ""
         if not call_cmd(sudo_cmd + "make all", lang.string("Install GDB failed."),build_dir + "/gdb-" + install_version + "/", True):
             continue
-        print(lang.string('GDB %s is available in "%s".'), %(install_version, install_dir + "/bin/gdb"))
-    else
-        print(lang.string('GDB %s is available in "%s".'), %(install_version, build_dir + "/gdb-" + install_version + "/gdb/gdb"))
+        print(lang.string('GDB %s is available in "%s".') %(install_version, install_dir + "/bin/gdb"))
+    else:
+        print(lang.string('GDB %s is available in "%s".') %(install_version, build_dir + "/gdb-" + install_version + "/gdb/gdb"))
     break
