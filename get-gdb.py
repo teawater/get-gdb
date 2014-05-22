@@ -26,8 +26,8 @@ class Lang(object):
                  '"%s"不正确。')
 	self.add('Current system is "%s".',
                  '当前系统是"%s".')
-	self.add("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.",
-                 "当前系统还没有被支持，需要手动执行一些命令。\n如果你希望KGTP支持你的系统，请汇报这个到 https://github.com/teawater/kgtp/issues 或者 teawater@gmail.com。")
+	self.add("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/get-gdb/issues or teawater@gmail.com.",
+                 "当前系统还没有被支持，需要手动执行一些命令。\n如果你希望KGTP支持你的系统，请汇报这个到 https://github.com/teawater/get-gdb/issues 或者 teawater@gmail.com。")
         self.add("Which version of GDB do you want to install?",
                  "你要安装哪个版本的GDB?")
 	self.add("Build from source without check GDB in current system?",
@@ -281,7 +281,7 @@ distro = get_distro()
 if distro != "Other":
     print(lang.string('Current system is "%s".') %distro)
 else:
-    print(lang.string("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com."))
+    print(lang.string("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/get-gdb/issues or teawater@gmail.com."))
 
 install_version = select_from_list(GDB_VERSION_LIST, "7.7.1", lang.string("Which version of GDB do you want to install?"))
 install_version_f = float(install_version[0:3])
