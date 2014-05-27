@@ -290,7 +290,7 @@ if install_version_f > GDB_VERSION_HAVE_A:
 else:
     gdb_name = "gdb-" + install_version + "a.tar.bz2"
 
-if not yes_no(lang.string("Build from source without check GDB in current system?"), True, False):
+if not yes_no(lang.string("Build from source without check GDB in current system?")):
     if distro == "Other":
         install_packages(distro, ["gdb"])
 
@@ -313,7 +313,7 @@ if not yes_no(lang.string("Build from source without check GDB in current system
 
 #Install GDB from source code
 print lang.string("Build and install GDB ...")
-if yes_no(lang.string("Do you want to install GDB after it is built?"), True):
+if yes_no(lang.string("Do you want to install GDB after it is built?")):
     install_dir = input_dir(lang.string("Please input the PREFIX directory that you want to install(GDB will be installed to PREFIX/bin/):"), "/usr/local/")
 else:
     install_dir = ""
