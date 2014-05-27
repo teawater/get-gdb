@@ -342,9 +342,9 @@ while True:
         continue
     shutil.rmtree(gdb_name, True)
     if install_dir == "":
-	config_cmd = "./configure --disable-sid --disable-rda --disable-gdbtk --disable-tk --disable-itcl --disable-tcl --disable-libgui --disable-ld --disable-gas --disable-binutils --disable-gprof --with-gdb-datadir=" + build_dir + "/gdb-" + install_version + "/" + "/gdb/data-directory/"
+        config_cmd = "./configure --disable-sid --disable-rda --disable-gdbtk --disable-tk --disable-itcl --disable-tcl --disable-libgui --disable-ld --disable-gas --disable-binutils --disable-gprof --with-gdb-datadir=" + build_dir + "/gdb-" + install_version + "/" + "/gdb/data-directory/ --enable-build-warnings=no"
     else:
-        config_cmd = "./configure --prefix=" + install_dir +" --disable-sid --disable-rda --disable-gdbtk --disable-tk --disable-itcl --disable-tcl --disable-libgui --disable-ld --disable-gas --disable-binutils --disable-gprof"
+        config_cmd = "./configure --prefix=" + install_dir +" --disable-sid --disable-rda --disable-gdbtk --disable-tk --disable-itcl --disable-tcl --disable-libgui --disable-ld --disable-gas --disable-binutils --disable-gprof --enable-build-warnings=no"
     if not call_cmd(config_cmd, lang.string("Config GDB failed."), build_dir + "/gdb-" + install_version + "/", True):
         continue
     if not call_cmd("make all", lang.string("Build GDB failed."), build_dir + "/gdb-" + install_version + "/", True):
