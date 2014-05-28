@@ -55,7 +55,9 @@ class Lang(object):
 	self.add("Install GDB failed.",
                  "安装GDB失败。")
 	self.add('GDB %s is available in "%s".',
-                 'GDB %s在"%s"。')
+             'GDB %s在"%s"。')
+    self.add('"%s" exist.  Use it without download a new one?',
+             '"%s"存在，是否不下载而直接使用其？')
 
     def set_language(self, language):
         if language != "":
@@ -334,13 +336,15 @@ else:
 build_dir = input_dir(lang.string("Please input the directory that you want to build GDB:"), os.getcwd())
 os.chdir(build_dir)
 while True:
-    shutil.rmtree(build_dir + "/" + gdb_name, True)
+    if (not os.path.isfile(build_dir + "/" + gdb_name) 
+        or not yes_no(lang.string('"%s" exist.  Use it without download a new one?') %(build_dir + "/" + gdb_name))):
+        shutil.rmtree(build_dir + "/" + gdb_name, True)
+        if not call_cmd("wget http://ftp.gnu.org/gnu/gdb/" + gdb_name, lang.string("Download GDB source package failed."), "", True):
+            continue
     shutil.rmtree(build_dir + "gdb-" + install_version + "/", True)
-    if not call_cmd("wget http://ftp.gnu.org/gnu/gdb/" + gdb_name, lang.string("Download GDB source package failed."), "", True):
-        continue
     if not call_cmd("tar vxjf " + gdb_name + " -C ./", lang.string("Uncompress GDB source package failed."), "", True):
         continue
-    shutil.rmtree(gdb_name, True)
+    #shutil.rmtree(build_dir + "/" + gdb_name, True)
     if install_dir == "":
         config_cmd = "./configure --disable-sid --disable-rda --disable-gdbtk --disable-tk --disable-itcl --disable-tcl --disable-libgui --disable-ld --disable-gas --disable-binutils --disable-gprof --with-gdb-datadir=" + build_dir + "/gdb-" + install_version + "/" + "/gdb/data-directory/ --enable-build-warnings=no"
     else:
