@@ -4,8 +4,8 @@
 import os, re, shutil
 
 GDB_VERSION_LIST = ("6.1.1", "6.2.1", "6.3", "6.4", "6.5", "6.6",
-		    "6.7", "6.7.1", "6.8", "7.0.1", "7.1", "7.2", "7.3.1",
-		    "7.4.1", "7.5.1", "7.6.2", "7.7.1")
+                    "6.7", "6.7.1", "6.8", "7.0.1", "7.1", "7.2", "7.3.1",
+                    "7.4.1", "7.5.1", "7.6.2", "7.7.1")
 GDB_VERSION_HAVE_A = 7.2
 
 class Lang(object):
@@ -61,10 +61,10 @@ class Lang(object):
 
     def set_language(self, language):
         if language != "":
-	    if language[0] == "e" or language[0] == "E":
-		self.language = "en"
-	    else:
-	        self.language = "cn"
+            if language[0] == "e" or language[0] == "E":
+                self.language = "en"
+            else:
+                self.language = "cn"
             self.is_set = True
 
     def add(self, en, cn):
@@ -77,19 +77,19 @@ class Lang(object):
 
 def select_from_list(entry_list, default_entry, introduction):
     if type(entry_list) == dict:
-	entry_dict = entry_list
-	entry_list = list(entry_dict.keys())
-	entry_is_dict = True
+        entry_dict = entry_list
+        entry_list = list(entry_dict.keys())
+        entry_is_dict = True
     else:
-	entry_is_dict = False
+        entry_is_dict = False
     while True:
         default = -1
         default_str = ""
         for i in range(0, len(entry_list)):
-	    if entry_is_dict:
+            if entry_is_dict:
                 print("[%d] %s %s" %(i, entry_list[i], entry_dict[entry_list[i]]))
             else:
-		print("[%d] %s" %(i, entry_list[i]))
+                print("[%d] %s" %(i, entry_list[i]))
             if default_entry != "" and entry_list[i] == default_entry:
                 default = i
                 default_str = "[%d]" %i
@@ -133,7 +133,7 @@ def get_distro():
         if re.match('.*ubuntu.*', version):
             return "Ubuntu"
         elif re.match('.*opensuse.*', version):
-	    return "openSUSE"
+            return "openSUSE"
     except:
         pass
 
@@ -207,15 +207,15 @@ def get_source_version(distro, name):
         return 0
 
     if distro == "openSUSE":
-	got_name = False
-	got_version = False
-	for line in v:
-	    if got_name and re.match('^Version: ', line):
-		got_version = True
-		v = line
-		break
-	    if re.match('^Name: '+name, line):
-		got_name = True
+        got_name = False
+        got_version = False
+        for line in v:
+            if got_name and re.match('^Version: ', line):
+                got_version = True
+                v = line
+                break
+            if re.match('^Name: '+name, line):
+                got_name = True
     elif not re.match('^'+name, v):
         return 0
 
@@ -245,7 +245,7 @@ def install_packages(distro, packages, auto=False):
         elif distro == "Ubuntu":
             ret = os.system("apt-get -y --force-yes install " + packages)
         elif distro == "openSUSE":
-	    ret = os.system("zypper -n install --oldpackage " + packages)
+            ret = os.system("zypper -n install --oldpackage " + packages)
         else:
             if auto:
                 return
@@ -262,16 +262,16 @@ def install_packages(distro, packages, auto=False):
 
 def input_dir(msg, default=""):
     if default != "":
-	default_str = '[' + default + ']'
+        default_str = '[' + default + ']'
     else:
         default_str = ''
     while True:
         ret_dir = raw_input(msg + default_str)
-	if ret_dir == "":
-	    ret_dir = default
-	if ret_dir == "":
-	    continue
-	if not os.path.isdir(ret_dir):
+        if ret_dir == "":
+            ret_dir = default
+        if ret_dir == "":
+            continue
+        if not os.path.isdir(ret_dir):
             print(lang.string('"%s" is not right.') %ret_dir)
             continue
         return os.path.realpath(ret_dir)
@@ -322,8 +322,8 @@ else:
 
 if distro == "Ubuntu":
     install_packages(distro, ["gcc", "texinfo", "m4", "flex", "bison",
-			      "libncurses5-dev", "libexpat1-dev",
-			      "python-dev", "wget"])
+                              "libncurses5-dev", "libexpat1-dev",
+                              "python-dev", "wget"])
 elif distro == "openSUSE":
     install_packages(distro, ["gcc", "texinfo", "m4", "flex",
                               "bison","ncurses-devel", "libexpat-devel",
@@ -354,10 +354,10 @@ while True:
     if not call_cmd("make all", lang.string("Build GDB failed."), build_dir + "/gdb-" + install_version + "/", True):
         continue
     if install_dir:
-	if not os.access(install_dir, os.W_OK):
-	    sudo_cmd = "sudo"
-	else:
-	    sudo_cmd = ""
+        if not os.access(install_dir, os.W_OK):
+            sudo_cmd = "sudo"
+        else:
+            sudo_cmd = ""
         if not call_cmd(sudo_cmd + "make all", lang.string("Install GDB failed."),build_dir + "/gdb-" + install_version + "/", True):
             continue
         print(lang.string('GDB %s is available in "%s".') %(install_version, install_dir + "/bin/gdb"))
