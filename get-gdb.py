@@ -22,42 +22,42 @@ class Lang(object):
                  '输入"y"后按回车键继续')
         self.add("Install packages failed.",
                  "安装包失败。")
-	self.add('"%s" is not right.',
+        self.add('"%s" is not right.',
                  '"%s"不正确。')
-	self.add('Current system is "%s".',
+        self.add('Current system is "%s".',
                  '当前系统是"%s".')
-	self.add("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/get-gdb/issues or teawater@gmail.com.",
+        self.add("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/get-gdb/issues or teawater@gmail.com.",
                  "当前系统还没有被支持，需要手动执行一些命令。\n如果你希望KGTP支持你的系统，请汇报这个到 https://github.com/teawater/get-gdb/issues 或者 teawater@gmail.com。")
         self.add("Which version of GDB do you want to install?",
                  "你要安装哪个版本的GDB?")
-	self.add("Build from source without check GDB in current system?",
-                 "不检查当前系统，直接从源码编译GDB？")
-	self.add('GDB in "%s" is OK for use.',
-                 '在"%s"中的GDB可用。')
-	self.add('GDB in software source is older than "%s".',
-                 '软件源中的GDB比"%s"老。')
-	self.add("Build and install GDB ...",
-                 "编译和安装GDB...")
-	self.add("Do you want to install GDB after it is built?",
-                 "需要在编译GDB后安装它吗？")
-	self.add("Please input the PREFIX directory that you want to install(GDB will be installed to PREFIX/bin/):",
+        self.add("Build from source without check GDB in current system?",
+                    "不检查当前系统，直接从源码编译GDB？")
+        self.add('GDB in "%s" is OK for use.',
+                    '在"%s"中的GDB可用。')
+        self.add('GDB in software source is older than "%s".',
+                    '软件源中的GDB比"%s"老。')
+        self.add("Build and install GDB ...",
+                    "编译和安装GDB...")
+        self.add("Do you want to install GDB after it is built?",
+                    "需要在编译GDB后安装它吗？")
+        self.add("Please input the PREFIX directory that you want to install(GDB will be installed to PREFIX/bin/):",
                  "请输入安装的PREFIX目录（GDB将被安装在 PREFIX/bin/ 目录中）：")
-	self.add("Please input the directory that you want to build GDB:",
+        self.add("Please input the directory that you want to build GDB:",
                  '请输入编译GDB的目录：')
-	self.add("Download GDB source package failed.",
+        self.add("Download GDB source package failed.",
                  '下载GDB源码包失败。')
-	self.add("Uncompress GDB source package failed.",
+        self.add("Uncompress GDB source package failed.",
                  '解压缩GDB源码包失败。')
-	self.add("Config GDB failed.",
+        self.add("Config GDB failed.",
                  "配置GDB失败。")
-	self.add("Build GDB failed.",
+        self.add("Build GDB failed.",
                  "编译GDB失败。")
-	self.add("Install GDB failed.",
+        self.add("Install GDB failed.",
                  "安装GDB失败。")
-	self.add('GDB %s is available in "%s".',
-             'GDB %s在"%s"。')
-    self.add('"%s" exist.  Use it without download a new one?',
-             '"%s"存在，是否不下载而直接使用其？')
+        self.add('GDB %s is available in "%s".',
+                 'GDB %s在"%s"。')
+        self.add('"%s" exist.  Use it without download a new one?',
+                 '"%s"存在，是否不下载而直接使用其？')
 
     def set_language(self, language):
         if language != "":
