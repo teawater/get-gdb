@@ -1,0 +1,137 @@
+--- a/gdb/alpha-linux-tdep.c
++++ b/gdb/alpha-linux-tdep.c
+@@ -113,7 +113,7 @@ alpha_linux_sigcontext_addr (struct fram
+   /* __NR_rt_sigreturn has a couple of structures on the stack.  This is:
+ 
+ 	struct rt_sigframe {
+-	  struct siginfo info;
++	  siginfo_t info;
+ 	  struct ucontext uc;
+         };
+ 
+--- a/gdb/arm-linux-tdep.c
++++ b/gdb/arm-linux-tdep.c
+@@ -268,7 +268,7 @@ arm_linux_sigtramp_cache (struct frame_i
+ 
+ /* There are three elements in an rt_sigframe before the ucontext:
+    pinfo, puc, and info.  The first two are pointers and the third
+-   is a struct siginfo, with size 128 bytes.  We could follow puc
++   is a siginfo_t, with size 128 bytes.  We could follow puc
+    to the ucontext, but it's simpler to skip the whole thing.  */
+ #define ARM_OLD_RT_SIGFRAME_SIGINFO 0x8
+ #define ARM_OLD_RT_SIGFRAME_UCONTEXT 0x88
+--- a/gdb/frv-linux-tdep.c
++++ b/gdb/frv-linux-tdep.c
+@@ -92,9 +92,9 @@ frv_linux_pc_in_sigtramp (CORE_ADDR pc,
+       {
+ 	      void (*pretcode)(void);
+ 	      int sig;
+-	      struct siginfo *pinfo;
++	      siginfo_t *pinfo;
+ 	      void *puc;
+-	      struct siginfo info;
++	      siginfo_t info;
+ 	      struct ucontext uc;
+ 	      uint32_t retcode[2];
+       };
+--- a/gdb/hppa-linux-tdep.c
++++ b/gdb/hppa-linux-tdep.c
+@@ -181,10 +181,10 @@ hppa_linux_sigtramp_find_sigcontext (COR
+     }
+ 
+   /* sp + sfoffs[try] points to a struct rt_sigframe, which contains
+-     a struct siginfo and a struct ucontext.  struct ucontext contains
++     a siginfo_t and a struct ucontext.  struct ucontext contains
+      a struct sigcontext. Return an offset to this sigcontext here.  Too 
+      bad we cannot include system specific headers :-(.  
+-     sizeof(struct siginfo) == 128
++     sizeof(siginfo_t) == 128
+      offsetof(struct ucontext, uc_mcontext) == 24.  */
+   return sp + sfoffs[try] + 128 + 24;
+ }
+--- a/gdb/ia64-linux-nat.c
++++ b/gdb/ia64-linux-nat.c
+@@ -637,7 +637,7 @@ static int
+ ia64_linux_stopped_data_address (struct target_ops *ops, CORE_ADDR *addr_p)
+ {
+   CORE_ADDR psr;
+-  struct siginfo *siginfo_p;
++  siginfo_t *siginfo_p;
+   struct regcache *regcache = get_current_regcache ();
+ 
+   siginfo_p = linux_nat_get_siginfo (inferior_ptid);
+--- a/gdb/linux-nat.c
++++ b/gdb/linux-nat.c
+@@ -3306,7 +3306,7 @@ linux_nat_set_new_thread (struct target_
+ }
+ 
+ /* Return the saved siginfo associated with PTID.  */
+-struct siginfo *
++siginfo_t *
+ linux_nat_get_siginfo (ptid_t ptid)
+ {
+   struct lwp_info *lp = find_lwp_pid (ptid);
+--- a/gdb/linux-nat.h
++++ b/gdb/linux-nat.h
+@@ -60,7 +60,7 @@ struct lwp_info
+ 
+   /* Non-zero si_signo if this LWP stopped with a trap.  si_addr may
+      be the address of a hardware watchpoint.  */
+-  struct siginfo siginfo;
++  siginfo_t siginfo;
+ 
+   /* If WAITSTATUS->KIND != TARGET_WAITKIND_SPURIOUS, the waitstatus
+      for this LWP's last event.  This may correspond to STATUS above,
+@@ -123,4 +123,4 @@ void linux_nat_set_new_thread (struct ta
+ void linux_nat_switch_fork (ptid_t new_ptid);
+ 
+ /* Return the saved siginfo associated with PTID.  */
+-struct siginfo *linux_nat_get_siginfo (ptid_t ptid);
++siginfo_t *linux_nat_get_siginfo (ptid_t ptid);
+--- a/gdb/mips-linux-tdep.c
++++ b/gdb/mips-linux-tdep.c
+@@ -961,7 +961,7 @@ mips_linux_o32_sigframe_init (const stru
+   struct rt_sigframe_n32 {
+     u32 rs_ass[4];                  [ argument save space for o32 ]
+     u32 rs_code[2];                 [ signal trampoline ]
+-    struct siginfo rs_info;
++    siginfo_t rs_info;
+     struct ucontext rs_uc;
+   };
+ 
+--- a/gdb/mn10300-linux-tdep.c
++++ b/gdb/mn10300-linux-tdep.c
+@@ -527,9 +527,9 @@ struct rt_sigframe
+ {
+ 	void (*pretcode)(void);
+ 	int sig;
+-	struct siginfo *pinfo;
++	siginfo_t *pinfo;
+ 	void *puc;
+-	struct siginfo info;
++	siginfo_t info;
+ 	struct ucontext uc;
+ 	struct fpucontext fpuctx;
+ 	char retcode[8];
+--- a/gdb/ppc-linux-nat.c
++++ b/gdb/ppc-linux-nat.c
+@@ -870,7 +870,7 @@ ppc_linux_new_thread (ptid_t ptid)
+ static int
+ ppc_linux_stopped_data_address (struct target_ops *target, CORE_ADDR *addr_p)
+ {
+-  struct siginfo *siginfo_p;
++  siginfo_t *siginfo_p;
+ 
+   siginfo_p = linux_nat_get_siginfo (inferior_ptid);
+ 
+--- a/gdb/procfs.c
++++ b/gdb/procfs.c
+@@ -246,7 +246,7 @@ typedef struct sigaction gdb_sigaction_t
+ #ifdef HAVE_PR_SIGINFO64_T
+ typedef pr_siginfo64_t gdb_siginfo_t;
+ #else
+-typedef struct siginfo gdb_siginfo_t;
++typedef siginfo_t gdb_siginfo_t;
+ #endif
+ 
+ /* gdb_premptysysset */
