@@ -363,7 +363,7 @@ while True:
                 patch_name = PATCH_6_8
             elif install_version_f == 7.0:
                 patch_name = PATCH_7_0
-            else install_version_f >= 7.1 and install_version_f <=7.2:
+            elif install_version_f >= 7.1 and install_version_f <=7.2:
                 patch_name = PATCH_7_1_TO_7_2
             else:
                 patch_name = PATCH_7_3_TO_7_4
