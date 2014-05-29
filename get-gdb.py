@@ -9,8 +9,9 @@ GDB_VERSION_LIST = ("6.1.1", "6.2.1", "6.3", "6.4", "6.5", "6.6",
 GDB_VERSION_HAVE_A = 7.2
 
 GET_GDB_URL = "https://raw.githubusercontent.com/teawater/get-gdb/master/"
+PATCH_6_8 = "handle-siginfo-6_8.patch"
+PATCH_7_0 = "handle-siginfo-7_0.patch"
 PATCH_7_1_TO_7_2 = "handle-siginfo-7_1-to-7_2.patch"
-
 
 class Lang(object):
     '''Language class.'''
@@ -355,12 +356,18 @@ while True:
         config_cmd = "./configure --prefix=" + install_dir +" --disable-sid --disable-rda --disable-gdbtk --disable-tk --disable-itcl --disable-tcl --disable-libgui --disable-ld --disable-gas --disable-binutils --disable-gprof --enable-build-warnings=no"
     if not call_cmd(config_cmd, lang.string("Config GDB failed."), build_dir + "/gdb-" + install_version + "/", True):
         continue
-    if install_version_f >= 7.1 and install_version_f <=7.2:
+    if install_version_f >= 6.8 and install_version_f <=7.2:
         if os.system("make all") != 0:
-            shutil.rmtree(build_dir + "gdb-" + install_version + "/" + PATCH_7_1_TO_7_2, True)
-            if not call_cmd("wget " + GET_GDB_URL + PATCH_7_1_TO_7_2, "", build_dir + "/gdb-" + install_version + "/", True):
+            if install_version_f == 6.8:
+                patch_name = PATCH_6_8
+            elif install_version_f == 7.0:
+                patch_name = PATCH_7_0
+            else:
+                patch_name = PATCH_7_1_TO_7_2
+            shutil.rmtree(build_dir + "gdb-" + install_version + "/" + patch_name, True)
+            if not call_cmd("wget " + GET_GDB_URL + patch_name, "", build_dir + "/gdb-" + install_version + "/", True):
                 continue
-            if not call_cmd("patch -p1 < " + PATCH_7_1_TO_7_2, "", build_dir + "/gdb-" + install_version + "/", True):
+            if not call_cmd("patch -p1 < " + patch_name, "", build_dir + "/gdb-" + install_version + "/", True):
                 continue
             if not call_cmd("make all", lang.string("Build GDB failed."), build_dir + "/gdb-" + install_version + "/", True):
                 continue
