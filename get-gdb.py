@@ -229,6 +229,10 @@ def get_source_version(distro, name):
 
 def install_packages(distro, packages, auto=False):
     #Remove the package that doesn't need install from packages
+    if os.geteuid() != 0:
+        sudo = "sudo "
+    else:
+        sudo = ""
     if distro != "Other":
         tmp_packages = []
         for i in range(0, len(packages)):
@@ -247,11 +251,11 @@ def install_packages(distro, packages, auto=False):
     while True:
         ret = 0
         if distro == "Redhat":
-            ret = os.system("yum -y install " + packages)
+            ret = os.system(sudo + "yum -y install " + packages)
         elif distro == "Ubuntu":
-            ret = os.system("apt-get -y --force-yes install " + packages)
+            ret = os.system(sudo + "apt-get -y --force-yes install " + packages)
         elif distro == "openSUSE":
-            ret = os.system("zypper -n install --oldpackage " + packages)
+            ret = os.system(sudo + "zypper -n install --oldpackage " + packages)
         else:
             if auto:
                 return
