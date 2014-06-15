@@ -36,16 +36,16 @@ class Lang(object):
                  "当前系统还没有被支持，需要手动执行一些命令。\n如果你希望KGTP支持你的系统，请汇报这个到 https://github.com/teawater/get-gdb/issues 或者 teawater@gmail.com。")
         self.add("Which version of GDB do you want to install?",
                  "你要安装哪个版本的GDB?")
-        self.add("Build from source without check GDB in current system?",
-                    "不检查当前系统，直接从源码编译GDB？")
+        self.add("Build from source *without* check GDB in current system?",
+                 "*不*检查当前系统，直接从源码编译GDB？")
         self.add('GDB in "%s" is OK for use.',
-                    '在"%s"中的GDB可用。')
+                 '在"%s"中的GDB可用。')
         self.add('GDB in software source is older than "%s".',
-                    '软件源中的GDB比"%s"老。')
+                 '软件源中的GDB比"%s"老。')
         self.add("Build and install GDB ...",
-                    "编译和安装GDB...")
+                 "编译和安装GDB...")
         self.add("Do you want to install GDB after it is built?",
-                    "需要在编译GDB后安装它吗？")
+                 "需要在编译GDB后安装它吗？")
         self.add("Please input the PREFIX directory that you want to install(GDB will be installed to PREFIX/bin/):",
                  "请输入安装的PREFIX目录（GDB将被安装在 PREFIX/bin/ 目录中）：")
         self.add("Please input the directory that you want to build GDB:",
@@ -64,6 +64,8 @@ class Lang(object):
                  'GDB %s在"%s"。')
         self.add('"%s" exist.  Use it without download a new one?',
                  '"%s"存在，是否不下载而直接使用其？')
+        self.add("Cannot get version of GDB in software source, build from source code?",
+                 "不能取得软件源中GDB的版本，从源码编译？")
 
     def set_language(self, language):
         if language != "":
@@ -199,20 +201,22 @@ def get_source_version(distro, name):
         if len(v) <= 0:
             return 0
         v = v[-1]
-    elif distro == "Ubuntu":
-        try:
-            v = get_cmd("apt-get -qq changelog " + name)
-        except:
+        if not re.match('^'+name, v):
             return 0
+    elif distro == "Ubuntu":
+        v = get_cmd("apt-cache showpkg " + name, False)
+        for i in range(0, len(v)):
+            if v[i].strip() == "Versions:":
+                break
+            pass
+        else:
+            return 0
+        v = v[i + 1]
     elif distro == "openSUSE":
         try:
             v = get_cmd("zypper info " + name, False)
         except:
             return 0
-    else:
-        return 0
-
-    if distro == "openSUSE":
         got_name = False
         got_version = False
         for line in v:
@@ -222,7 +226,7 @@ def get_source_version(distro, name):
                 break
             if re.match('^Name: '+name, line):
                 got_name = True
-    elif not re.match('^'+name, v):
+    else:
         return 0
 
     return float(re.search(r'\d+\.\d+', v).group())
@@ -302,7 +306,7 @@ if install_version_f > GDB_VERSION_HAVE_A:
 else:
     gdb_name = "gdb-" + install_version + "a.tar.bz2"
 
-if not yes_no(lang.string("Build from source without check GDB in current system?")):
+if not yes_no(lang.string("Build from source *without* check GDB in current system?")):
     if distro == "Other":
         install_packages(distro, ["gdb"])
 
@@ -317,11 +321,13 @@ if not yes_no(lang.string("Build from source without check GDB in current system
         if distro != "Other":
             print(lang.string("Check the software source..."))
             version = get_source_version(distro, "gdb")
+            if version == 0 and yes_no(lang.string("Cannot get version of GDB in software source, build from source code?")):
+                break
             if version >= install_version_f:
                 install_packages(distro, ["gdb"])
-                continue
             else:
                 print (lang.string('GDB in software source is older than "%s".') %install_version)
+                break
 
 #Install GDB from source code
 print lang.string("Build and install GDB ...")
