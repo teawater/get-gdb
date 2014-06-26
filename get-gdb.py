@@ -389,7 +389,7 @@ while True:
             continue
     if install_dir:
         if not os.access(install_dir, os.W_OK):
-            sudo_cmd = "sudo"
+            sudo_cmd = "sudo "
         else:
             sudo_cmd = ""
         if not call_cmd(sudo_cmd + "make all", lang.string("Install GDB failed."),build_dir + "/gdb-" + install_version + "/", True):
