@@ -339,15 +339,15 @@ else:
 if distro == "Ubuntu":
     install_packages(distro, ["gcc", "texinfo", "m4", "flex", "bison",
                               "libncurses5-dev", "libexpat1-dev",
-                              "python-dev", "wget"])
+                              "python-dev", "axel"])
 elif distro == "openSUSE":
     install_packages(distro, ["gcc", "texinfo", "m4", "flex",
                               "bison","ncurses-devel", "libexpat-devel",
-                              "python-devel", "wget","make"])
+                              "python-devel", "axel","make"])
 else:
     install_packages(distro, ["gcc", "texinfo", "m4", "flex",
                               "bison","ncurses-devel", "expat-devel",
-                              "python-devel", "wget"])
+                              "python-devel", "axel"])
 
 build_dir = input_dir(lang.string("Please input the directory that you want to build GDB:"), os.getcwd())
 os.chdir(build_dir)
@@ -355,7 +355,7 @@ while True:
     if (not os.path.isfile(build_dir + "/" + gdb_name) 
         or not yes_no(lang.string('"%s" exist.  Use it without download a new one?') %(build_dir + "/" + gdb_name))):
         os.remove(build_dir + "/" + gdb_name)
-        if not call_cmd("wget http://ftp.gnu.org/gnu/gdb/" + gdb_name, lang.string("Download GDB source package failed."), "", True):
+        if not call_cmd("axel http://ftp.gnu.org/gnu/gdb/" + gdb_name, lang.string("Download GDB source package failed."), "", True):
             continue
     shutil.rmtree(build_dir + "gdb-" + install_version + "/", True)
     if not call_cmd("tar vxjf " + gdb_name + " -C ./", lang.string("Uncompress GDB source package failed."), "", True):
@@ -378,7 +378,7 @@ while True:
             else:
                 patch_name = PATCH_7_3_TO_7_4
             shutil.rmtree(build_dir + "gdb-" + install_version + "/" + patch_name, True)
-            if not call_cmd("wget " + GET_GDB_URL + patch_name, "", build_dir + "/gdb-" + install_version + "/", True):
+            if not call_cmd("axel " + GET_GDB_URL + patch_name, "", build_dir + "/gdb-" + install_version + "/", True):
                 continue
             if not call_cmd("patch -p1 < " + patch_name, "", build_dir + "/gdb-" + install_version + "/", True):
                 continue
