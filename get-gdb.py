@@ -354,7 +354,7 @@ os.chdir(build_dir)
 while True:
     if (not os.path.isfile(build_dir + "/" + gdb_name) 
         or not yes_no(lang.string('"%s" exist.  Use it without download a new one?') %(build_dir + "/" + gdb_name))):
-        shutil.rmtree(build_dir + "/" + gdb_name, True)
+        os.remove()(build_dir + "/" + gdb_name)
         if not call_cmd("wget http://ftp.gnu.org/gnu/gdb/" + gdb_name, lang.string("Download GDB source package failed."), "", True):
             continue
     shutil.rmtree(build_dir + "gdb-" + install_version + "/", True)
