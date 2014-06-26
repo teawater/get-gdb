@@ -392,7 +392,7 @@ while True:
             sudo_cmd = "sudo "
         else:
             sudo_cmd = ""
-        if not call_cmd(sudo_cmd + "make all", lang.string("Install GDB failed."),build_dir + "/gdb-" + install_version + "/", True):
+        if not call_cmd(sudo_cmd + "make install", lang.string("Install GDB failed."),build_dir + "/gdb-" + install_version + "/", True):
             continue
         print(lang.string('GDB %s is available in "%s".') %(install_version, install_dir + "/bin/gdb"))
     else:
