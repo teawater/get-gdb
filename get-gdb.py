@@ -5,8 +5,9 @@ import os, re, shutil
 
 GDB_VERSION_LIST = ("6.1.1", "6.2.1", "6.3", "6.4", "6.5", "6.6",
                     "6.7", "6.7.1", "6.8", "7.0.1", "7.1", "7.2", "7.3.1",
-                    "7.4.1", "7.5.1", "7.6.2", "7.7.1")
+                    "7.4.1", "7.5.1", "7.6.2", "7.7.1", "7.8")
 GDB_VERSION_HAVE_A = 7.2
+GDB_VERSION_HAVE_XZ = 7.8
 
 GET_GDB_URL = "https://raw.githubusercontent.com/teawater/get-gdb/master/"
 PATCH_6_8 = "handle-siginfo-6_8.patch"
@@ -299,9 +300,11 @@ if distro != "Other":
 else:
     print(lang.string("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/get-gdb/issues or teawater@gmail.com."))
 
-install_version = select_from_list(GDB_VERSION_LIST, "7.7.1", lang.string("Which version of GDB do you want to install?"))
+install_version = select_from_list(GDB_VERSION_LIST, "7.8", lang.string("Which version of GDB do you want to install?"))
 install_version_f = float(install_version[0:3])
-if install_version_f > GDB_VERSION_HAVE_A:
+if install_version_f >= GDB_VERSION_HAVE_XZ:
+    gdb_name = "gdb-" + install_version + ".tar.xz"
+elif install_version_f > GDB_VERSION_HAVE_A:
     gdb_name = "gdb-" + install_version + ".tar.bz2"
 else:
     gdb_name = "gdb-" + install_version + "a.tar.bz2"
@@ -361,7 +364,7 @@ while True:
         if not call_cmd("axel http://ftp.gnu.org/gnu/gdb/" + gdb_name, lang.string("Download GDB source package failed."), "", True):
             continue
     shutil.rmtree(build_dir + "gdb-" + install_version + "/", True)
-    if not call_cmd("tar vxjf " + gdb_name + " -C ./", lang.string("Uncompress GDB source package failed."), "", True):
+    if not call_cmd("tar vxf " + gdb_name + " -C ./", lang.string("Uncompress GDB source package failed."), "", True):
         continue
     #shutil.rmtree(build_dir + "/" + gdb_name, True)
     if install_dir == "":
