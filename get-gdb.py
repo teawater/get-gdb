@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import os, re, shutil
+import os, re, shutil, multiprocessing
 
 GDB_VERSION_LIST = ("6.1.1", "6.2.1", "6.3", "6.4", "6.5", "6.6",
                     "6.7", "6.7.1", "6.8", "7.0.1", "7.1", "7.2", "7.3.1",
@@ -67,6 +67,8 @@ class Lang(object):
                  '"%s"存在，是否不下载而直接使用其？')
         self.add("Cannot get version of GDB in software source, build from source code?",
                  "不能取得软件源中GDB的版本，从源码编译？")
+        self.add('Please input the number of jobs to compile GDB:[%d]',
+                 '请输入编译GDB的任务数量:[%d]')
 
     def set_language(self, language):
         if language != "":
@@ -339,6 +341,21 @@ if yes_no(lang.string("Do you want to install GDB after it is built?")):
 else:
     install_dir = ""
 
+build_dir = input_dir(lang.string("Please input the directory that you want to build GDB:"), os.getcwd())
+os.chdir(build_dir)
+
+compile_job_number = multiprocessing.cpu_count()
+while True:
+    s = raw_input(lang.string('Please input the number of jobs to compile GDB:[%d]') %compile_job_number)
+    if len(s) == 0:
+        break
+    try:
+        compile_job_number = int(s)
+    except:
+        continue
+    break
+compile_cmd = "make -j " + str(compile_job_number) + " all"
+
 if distro == "Ubuntu":
     install_packages(distro, ["gcc", "texinfo", "m4", "flex", "bison",
                               "libncurses5-dev", "libexpat1-dev",
@@ -352,8 +369,6 @@ else:
                               "bison","ncurses-devel", "expat-devel",
                               "python-devel", "axel"])
 
-build_dir = input_dir(lang.string("Please input the directory that you want to build GDB:"), os.getcwd())
-os.chdir(build_dir)
 while True:
     if (not os.path.isfile(build_dir + "/" + gdb_name) 
         or not yes_no(lang.string('"%s" exist.  Use it without download a new one?') %(build_dir + "/" + gdb_name))):
@@ -373,8 +388,9 @@ while True:
         config_cmd = "./configure --prefix=" + install_dir +" --disable-sid --disable-rda --disable-gdbtk --disable-tk --disable-itcl --disable-tcl --disable-libgui --disable-ld --disable-gas --disable-binutils --disable-gprof --enable-build-warnings=no"
     if not call_cmd(config_cmd, lang.string("Config GDB failed."), build_dir + "/gdb-" + install_version + "/", True):
         continue
+
     if install_version_f >= 6.8 and install_version_f <=7.4:
-        if os.system("make all") != 0:
+        if os.system(compile_cmd) != 0:
             if install_version_f == 6.8:
                 patch_name = PATCH_6_8
             elif install_version_f == 7.0:
@@ -388,10 +404,10 @@ while True:
                 continue
             if not call_cmd("patch -p1 < " + patch_name, "", build_dir + "/gdb-" + install_version + "/", True):
                 continue
-            if not call_cmd("make all", lang.string("Build GDB failed."), build_dir + "/gdb-" + install_version + "/", True):
+            if not call_cmd(compile_cmd, lang.string("Build GDB failed."), build_dir + "/gdb-" + install_version + "/", True):
                 continue
     else:
-        if not call_cmd("make all", lang.string("Build GDB failed."), build_dir + "/gdb-" + install_version + "/", True):
+        if not call_cmd(compile_cmd, lang.string("Build GDB failed."), build_dir + "/gdb-" + install_version + "/", True):
             continue
     if install_dir:
         if not os.access(install_dir, os.W_OK):
