@@ -69,6 +69,14 @@ class Lang(object):
                  "不能取得软件源中GDB的版本，从源码编译？")
         self.add('Please input the number of jobs to compile GDB:[%d]',
                  '请输入编译GDB的任务数量:[%d]')
+        self.add("Current architecture",
+                 "当前系统体系结构")
+        self.add("Input other",
+                 "输入其他体系结构")
+        self.add("Which architecture do you want to build?",
+                 "你要编译哪个体系结构？")
+        self.add("Input the architecture:",
+                 "输入体系结构:")
 
     def set_language(self, language):
         if language != "":
@@ -86,7 +94,7 @@ class Lang(object):
             return s
         return self.data[s]
 
-def select_from_list(entry_list, default_entry, introduction):
+def select_from_list(entry_list, default_entry, introduction, return_number=False):
     if type(entry_list) == dict:
         entry_dict = entry_list
         entry_list = list(entry_dict.keys())
@@ -112,6 +120,10 @@ def select_from_list(entry_list, default_entry, introduction):
             select = -1
         if select >= 0 and select < len(entry_list):
             break
+
+    if return_number:
+        return select
+
     return entry_list[select]
 
 def yes_no(string="", has_default=False, default_answer=True):
@@ -311,7 +323,25 @@ elif install_version_f > GDB_VERSION_HAVE_A:
 else:
     gdb_name = "gdb-" + install_version + "a.tar.bz2"
 
-if not yes_no(lang.string("Build from source *without* check GDB in current system?")):
+#Target
+target_list = (lang.string("Current architecture"), lang.string("Input other"),
+               "x86_64-linux", "arm-linux", "mips-linux")
+num = select_from_list(target_list,
+                       lang.string("Current architecture"),
+                       lang.string("Which architecture do you want to build?"), True)
+target_cmd = "--target="
+if num == 0:
+    target_cmd = ""
+elif num >= 2:
+    target_cmd += target_list[num]
+elif num == 1:
+    while True:
+        s = raw_input(lang.string("Input the architecture:"))
+        if len(s) != 0:
+            break
+    target_cmd += s
+
+if target_cmd == "" and not yes_no(lang.string("Build from source *without* check GDB in current system?")):
     if distro == "Other":
         install_packages(distro, ["gdb"])
 
@@ -378,14 +408,14 @@ while True:
             pass
         if not call_cmd("axel http://ftp.gnu.org/gnu/gdb/" + gdb_name, lang.string("Download GDB source package failed."), "", True):
             continue
-    shutil.rmtree(build_dir + "gdb-" + install_version + "/", True)
+    shutil.rmtree(build_dir + "/gdb-" + install_version + "/", True)
     if not call_cmd("tar vxf " + gdb_name + " -C ./", lang.string("Uncompress GDB source package failed."), "", True):
         continue
-    #shutil.rmtree(build_dir + "/" + gdb_name, True)
+    #shutil.rmtree(build_dir + "/gdb-" + install_version + "/", True)
     if install_dir == "":
-        config_cmd = "./configure --disable-sid --disable-rda --disable-gdbtk --disable-tk --disable-itcl --disable-tcl --disable-libgui --disable-ld --disable-gas --disable-binutils --disable-gprof --with-gdb-datadir=" + build_dir + "/gdb-" + install_version + "/" + "/gdb/data-directory/ --enable-build-warnings=no"
+        config_cmd = "./configure " + target_cmd + " --disable-sid --disable-rda --disable-gdbtk --disable-tk --disable-itcl --disable-tcl --disable-libgui --disable-ld --disable-gas --disable-binutils --disable-gprof --with-gdb-datadir=" + build_dir + "/gdb-" + install_version + "/" + "/gdb/data-directory/ --enable-build-warnings=no"
     else:
-        config_cmd = "./configure --prefix=" + install_dir +" --disable-sid --disable-rda --disable-gdbtk --disable-tk --disable-itcl --disable-tcl --disable-libgui --disable-ld --disable-gas --disable-binutils --disable-gprof --enable-build-warnings=no"
+        config_cmd = "./configure " + target_cmd + " --prefix=" + install_dir +" --disable-sid --disable-rda --disable-gdbtk --disable-tk --disable-itcl --disable-tcl --disable-libgui --disable-ld --disable-gas --disable-binutils --disable-gprof --enable-build-warnings=no"
     if not call_cmd(config_cmd, lang.string("Config GDB failed."), build_dir + "/gdb-" + install_version + "/", True):
         continue
 
