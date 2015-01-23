@@ -5,7 +5,8 @@ import os, re, shutil, multiprocessing
 
 GDB_VERSION_LIST = ("6.1.1", "6.2.1", "6.3", "6.4", "6.5", "6.6",
                     "6.7", "6.7.1", "6.8", "7.0.1", "7.1", "7.2", "7.3.1",
-                    "7.4.1", "7.5.1", "7.6.2", "7.7.1", "7.8")
+                    "7.4.1", "7.5.1", "7.6.2", "7.7.1", "7.8", "7.8.1",
+                    "7.8.2")
 GDB_VERSION_HAVE_A = 7.2
 GDB_VERSION_HAVE_XZ = 7.8
 
@@ -314,7 +315,7 @@ if distro != "Other":
 else:
     print(lang.string("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/get-gdb/issues or teawater@gmail.com."))
 
-install_version = select_from_list(GDB_VERSION_LIST, "7.8", lang.string("Which version of GDB do you want to install?"))
+install_version = select_from_list(GDB_VERSION_LIST, GDB_VERSION_LIST[len(GDB_VERSION_LIST)-1], lang.string("Which version of GDB do you want to install?"))
 install_version_f = float(install_version[0:3])
 if install_version_f >= GDB_VERSION_HAVE_XZ:
     gdb_name = "gdb-" + install_version + ".tar.xz"
@@ -330,16 +331,22 @@ num = select_from_list(target_list,
                        lang.string("Current architecture"),
                        lang.string("Which architecture do you want to build?"), True)
 target_cmd = "--target="
+arch = ""
 if num == 0:
     target_cmd = ""
 elif num >= 2:
     target_cmd += target_list[num]
+    arch = target_list[num]
 elif num == 1:
     while True:
         s = raw_input(lang.string("Input the architecture:"))
         if len(s) != 0:
             break
     target_cmd += s
+    arch = s
+
+if arch != "":
+    arch += "-"
 
 if target_cmd == "" and not yes_no(lang.string("Build from source *without* check GDB in current system?")):
     if distro == "Other":
@@ -446,7 +453,7 @@ while True:
             sudo_cmd = ""
         if not call_cmd(sudo_cmd + "make install", lang.string("Install GDB failed."),build_dir + "/gdb-" + install_version + "/", True):
             continue
-        print(lang.string('GDB %s is available in "%s".') %(install_version, install_dir + "/bin/gdb"))
+        print(lang.string('GDB %s is available in "%s".') %(install_version, install_dir + "/bin/" + arch + "gdb"))
     else:
         print(lang.string('GDB %s is available in "%s".') %(install_version, build_dir + "/gdb-" + install_version + "/gdb/gdb"))
     break
