@@ -1,0 +1,22 @@
+--- a/gdb/gdbtypes.c
++++ b/gdb/gdbtypes.c
+@@ -1823,8 +1823,17 @@ resolve_dynamic_struct (struct type *typ
+ 	 incorrect results.  */
+       if (t != TYPE_FIELD_TYPE (resolved_type, i)
+ 	  && i != vla_field)
+-	error (_("Attempt to resolve a variably-sized type which appears "
+-		 "in the interior of a structure type"));
++	{
++	  static int show_warning = 0;
++
++	  if (show_warning == 0)
++	    warning (_("Attempt to resolve a variably-sized type which appears "
++		       "in the interior of a structure type"));
++	  if (show_warning >= 100)
++	    show_warning = 0;
++	  else
++	    show_warning++;
++	}
+ 
+       TYPE_FIELD_TYPE (resolved_type, i) = t;
+     }

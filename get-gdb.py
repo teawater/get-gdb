@@ -15,6 +15,7 @@ PATCH_6_8 = "handle-siginfo-6_8.patch"
 PATCH_7_0 = "handle-siginfo-7_0.patch"
 PATCH_7_1_TO_7_2 = "handle-siginfo-7_1-to-7_2.patch"
 PATCH_7_3_TO_7_4 = "handle-siginfo-7_3-to-7_4.patch"
+PATCH_7_8_2_ZONE = "handle-kernel-zone-7_8_2.patch"
 
 class Lang(object):
     '''Language class.'''
@@ -426,7 +427,8 @@ while True:
     if not call_cmd(config_cmd, lang.string("Config GDB failed."), build_dir + "/gdb-" + install_version + "/", True):
         continue
 
-    if install_version_f >= 6.8 and install_version_f <=7.4:
+    if ((install_version_f >= 6.8 and install_version_f <=7.4)
+	or install_version == "7.8.2"):
         if os.system(compile_cmd) != 0:
             if install_version_f == 6.8:
                 patch_name = PATCH_6_8
@@ -434,8 +436,10 @@ while True:
                 patch_name = PATCH_7_0
             elif install_version_f >= 7.1 and install_version_f <=7.2:
                 patch_name = PATCH_7_1_TO_7_2
-            else:
+            elif install_version_f >= 7.3 and install_version_f <=7.4:
                 patch_name = PATCH_7_3_TO_7_4
+            elif install_version == "7.8.2":
+		patch_name = PATCH_7_8_2_ZONE
             shutil.rmtree(build_dir + "gdb-" + install_version + "/" + patch_name, True)
             if not call_cmd("axel " + GET_GDB_URL + patch_name, "", build_dir + "/gdb-" + install_version + "/", True):
                 continue
