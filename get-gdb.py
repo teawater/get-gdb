@@ -307,6 +307,20 @@ def input_dir(msg, default=""):
             continue
         return os.path.realpath(ret_dir)
 
+def patch_dir(patch_name):
+    global build_dir, install_version
+
+    try:
+        os.remove(patch_name)
+    except:
+        pass
+    if not call_cmd("wget " + GET_GDB_URL + patch_name, "", build_dir + "/gdb-" + install_version + "/", True):
+        return False
+    if not call_cmd("patch -p1 < " + patch_name, "", build_dir + "/gdb-" + install_version + "/", True):
+        return False
+
+    return True
+
 lang = Lang()
 lang.set_language(select_from_list(("English", "Chinese"), "", "Which language do you want to use?"))
 
@@ -397,15 +411,15 @@ compile_cmd = "make -j " + str(compile_job_number) + " all"
 if distro == "Ubuntu":
     install_packages(distro, ["gcc", "texinfo", "m4", "flex", "bison",
                               "libncurses5-dev", "libexpat1-dev",
-                              "python-dev", "axel"])
+                              "python-dev", "axel", "wget"])
 elif distro == "openSUSE":
     install_packages(distro, ["gcc", "texinfo", "m4", "flex",
                               "bison","ncurses-devel", "libexpat-devel",
-                              "python-devel", "axel","make"])
+                              "python-devel", "axel","make", "wget"])
 else:
     install_packages(distro, ["gcc", "texinfo", "m4", "flex",
                               "bison","ncurses-devel", "expat-devel",
-                              "python-devel", "axel"])
+                              "python-devel", "axel", "wget"])
 
 while True:
     if (not os.path.isfile(build_dir + "/" + gdb_name) 
@@ -427,6 +441,10 @@ while True:
     if not call_cmd(config_cmd, lang.string("Config GDB failed."), build_dir + "/gdb-" + install_version + "/", True):
         continue
 
+    if install_version == "7.8.2":
+        if not patch_dir(PATCH_7_8_2_ZONE):
+                continue
+
     if ((install_version_f >= 6.8 and install_version_f <=7.4)
 	or install_version == "7.8.2"):
         if os.system(compile_cmd) != 0:
@@ -438,13 +456,13 @@ while True:
                 patch_name = PATCH_7_1_TO_7_2
             elif install_version_f >= 7.3 and install_version_f <=7.4:
                 patch_name = PATCH_7_3_TO_7_4
-            elif install_version == "7.8.2":
-		patch_name = PATCH_7_8_2_ZONE
             shutil.rmtree(build_dir + "gdb-" + install_version + "/" + patch_name, True)
-            if not call_cmd("axel " + GET_GDB_URL + patch_name, "", build_dir + "/gdb-" + install_version + "/", True):
+            if not patch_dir(patch_name):
                 continue
-            if not call_cmd("patch -p1 < " + patch_name, "", build_dir + "/gdb-" + install_version + "/", True):
-                continue
+            #if not call_cmd("axel " + GET_GDB_URL + patch_name, "", build_dir + "/gdb-" + install_version + "/", True):
+                #continue
+            #if not call_cmd("patch -p1 < " + patch_name, "", build_dir + "/gdb-" + install_version + "/", True):
+                #continue
             if not call_cmd(compile_cmd, lang.string("Build GDB failed."), build_dir + "/gdb-" + install_version + "/", True):
                 continue
     else:
