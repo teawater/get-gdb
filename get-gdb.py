@@ -6,7 +6,7 @@ import os, re, shutil, multiprocessing
 GDB_VERSION_LIST = ("6.1.1", "6.2.1", "6.3", "6.4", "6.5", "6.6",
                     "6.7", "6.7.1", "6.8", "7.0.1", "7.1", "7.2", "7.3.1",
                     "7.4.1", "7.5.1", "7.6.2", "7.7.1", "7.8", "7.8.1",
-                    "7.8.2")
+                    "7.8.2", "7.9", "7.9.1")
 GDB_VERSION_HAVE_A = 7.2
 GDB_VERSION_HAVE_XZ = 7.8
 
@@ -341,7 +341,7 @@ else:
 
 #Target
 target_list = (lang.string("Current architecture"), lang.string("Input other"),
-               "x86_64-linux", "arm-linux", "mips-linux")
+               "x86_64-linux", "arm-linux", "aarch64-linux", "mips-linux")
 num = select_from_list(target_list,
                        lang.string("Current architecture"),
                        lang.string("Which architecture do you want to build?"), True)
