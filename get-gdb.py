@@ -6,9 +6,10 @@ import os, re, shutil, multiprocessing
 GDB_VERSION_LIST = ("6.1.1", "6.2.1", "6.3", "6.4", "6.5", "6.6",
                     "6.7", "6.7.1", "6.8", "7.0.1", "7.1", "7.2", "7.3.1",
                     "7.4.1", "7.5.1", "7.6.2", "7.7.1", "7.8", "7.8.1",
-                    "7.8.2", "7.9", "7.9.1")
-GDB_VERSION_HAVE_A = 7.2
-GDB_VERSION_HAVE_XZ = 7.8
+                    "7.8.2", "7.9", "7.9.1", "7.10", "7.10.1", "7.11", "7.11.1",
+                    "7.12", "7.12.1")
+GDB_VERSION_HAVE_A = "7.2"
+GDB_VERSION_HAVE_XZ = "7.8"
 
 GET_GDB_URL = "https://raw.githubusercontent.com/teawater/get-gdb/master/"
 PATCH_6_8 = "handle-siginfo-6_8.patch"
@@ -79,6 +80,8 @@ class Lang(object):
                  "你要编译哪个体系结构？")
         self.add("Input the architecture:",
                  "输入体系结构:")
+        self.add("Got code issue.\nPlease report to https://github.com/teawater/get-gdb/issues or teawater@gmail.com.",
+                 "代码有错。\n请汇报这个到 https://github.com/teawater/get-gdb/issues 或者 teawater@gmail.com。")
 
     def set_language(self, language):
         if language != "":
@@ -199,15 +202,22 @@ def call_cmd(cmd, fail_str="", chdir="", outside_retry=False):
 
     return True
 
+def version_get(s):
+    ret = re.match(r'^GNU gdb (.+) (\d+\.\d+.\d+).*$', s)
+    if not ret:
+        ret = re.match(r'^GNU gdb (.+) (\d+\.\d+).*$', s)
+        if not ret:
+            return -1
+
+    return str(ret.group(2))
+
 def get_gdb_version(gdb):
     try:
         v = get_cmd(gdb + " -v")
     except:
         return -1
-    if not re.match(r'^GNU gdb (.+) \d+\.\d+.*$', v):
-        return -1
 
-    return float(re.search(r'\d+\.\d+', v).group())
+    return version_get(v)
 
 def get_source_version(distro, name):
     if distro == "Redhat":
@@ -246,7 +256,7 @@ def get_source_version(distro, name):
     else:
         return 0
 
-    return float(re.search(r'\d+\.\d+', v).group())
+    return version_get(v)
 
 def install_packages(distro, packages, auto=False):
     #Remove the package that doesn't need install from packages
@@ -321,6 +331,28 @@ def patch_dir(patch_name):
 
     return True
 
+def version_compare(a, b, same_return_true = False):
+    def version_array(v):
+        va = v.split('.')
+        if len(va) == 2:
+            va.append(0)
+        if len(va) != 3:
+            print "Error version: ", v, "\n", lang.string("Got code issue.\nPlease report to https://github.com/teawater/get-gdb/issues or teawater@gmail.com.")
+            exit(1)
+        for i in range(3):
+            va[i] = int(va[i])
+        return va
+    a = version_array(a)
+    b = version_array(b)
+    for i in range(3):
+        if a[i] > b[i]:
+            return True
+        elif a[i] < b[i]:
+            return False
+        elif i == 2 and same_return_true:
+            return True
+    return False
+
 lang = Lang()
 lang.set_language(select_from_list(("English", "Chinese"), "", "Which language do you want to use?"))
 
@@ -331,10 +363,10 @@ else:
     print(lang.string("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/get-gdb/issues or teawater@gmail.com."))
 
 install_version = select_from_list(GDB_VERSION_LIST, GDB_VERSION_LIST[len(GDB_VERSION_LIST)-1], lang.string("Which version of GDB do you want to install?"))
-install_version_f = float(install_version[0:3])
-if install_version_f >= GDB_VERSION_HAVE_XZ:
+
+if version_compare(install_version, GDB_VERSION_HAVE_XZ, True):
     gdb_name = "gdb-" + install_version + ".tar.xz"
-elif install_version_f > GDB_VERSION_HAVE_A:
+elif version_compare(install_version, GDB_VERSION_HAVE_A):
     gdb_name = "gdb-" + install_version + ".tar.bz2"
 else:
     gdb_name = "gdb-" + install_version + "a.tar.bz2"
@@ -370,7 +402,7 @@ if target_cmd == "" and not yes_no(lang.string("Build from source *without* chec
     while True:
         #Find GDB from PATH
         for p in os.environ.get("PATH").split(':'):
-            if os.path.isfile(p + "/gdb") and get_gdb_version(p + "/gdb") >= install_version_f:
+            if os.path.isfile(p + "/gdb") and version_compare(get_gdb_version(p + "/gdb"), install_version, True):
                 print(lang.string('GDB in "%s" is OK for use.') %(p + "/gdb"))
                 exit(0)
 
@@ -378,12 +410,12 @@ if target_cmd == "" and not yes_no(lang.string("Build from source *without* chec
         if distro != "Other":
             print(lang.string("Check the software source..."))
             version = get_source_version(distro, "gdb")
-            if version == 0 and yes_no(lang.string("Cannot get version of GDB in software source, build from source code?")):
+            if version == -1 and yes_no(lang.string("Cannot get version of GDB in software source, build from source code?")):
                 break
-            if version >= install_version_f:
+            if version_compare(version, install_version, True):
                 install_packages(distro, ["gdb"])
             else:
-                print (lang.string('GDB in software source is older than "%s".') %install_version)
+                print(lang.string('GDB in software source is older than "%s".') %install_version)
                 break
 
 #Install GDB from source code
@@ -445,16 +477,15 @@ while True:
         if not patch_dir(PATCH_7_8_2_ZONE):
                 continue
 
-    if ((install_version_f >= 6.8 and install_version_f <=7.4)
-	or install_version == "7.8.2"):
+    if (version_compare(install_version, "6.8", True) and version_compare("7.4", install_version, True)) or install_version == "7.8.2":
         if os.system(compile_cmd) != 0:
-            if install_version_f == 6.8:
+            if install_version == "6.8":
                 patch_name = PATCH_6_8
-            elif install_version_f == 7.0:
+            elif install_version == "7.0":
                 patch_name = PATCH_7_0
-            elif install_version_f >= 7.1 and install_version_f <=7.2:
+            elif version_compare(install_version, "7.1", True) and version_compare("7.2", install_version, True):
                 patch_name = PATCH_7_1_TO_7_2
-            elif install_version_f >= 7.3 and install_version_f <=7.4:
+            elif version_compare(install_version, "7.3", True) and version_compare("7.4", install_version, True):
                 patch_name = PATCH_7_3_TO_7_4
             shutil.rmtree(build_dir + "gdb-" + install_version + "/" + patch_name, True)
             if not patch_dir(patch_name):
