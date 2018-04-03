@@ -449,7 +449,7 @@ elif distro == "openSUSE":
                               "bison","ncurses-devel", "libexpat-devel",
                               "python-devel", "axel","make", "wget"])
 else:
-    install_packages(distro, ["gcc", "texinfo", "m4", "flex",
+    install_packages(distro, ["gcc", "gcc-c++", "texinfo", "m4", "flex",
                               "bison","ncurses-devel", "expat-devel",
                               "python-devel", "axel", "wget"])
 
