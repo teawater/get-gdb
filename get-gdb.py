@@ -18,6 +18,8 @@ PATCH_7_1_TO_7_2 = "handle-siginfo-7_1-to-7_2.patch"
 PATCH_7_3_TO_7_4 = "handle-siginfo-7_3-to-7_4.patch"
 PATCH_7_8_2_ZONE = "handle-kernel-zone-7_8_2.patch"
 
+DOWNLOAD_TOOL = "axel"
+
 class Lang(object):
     '''Language class.'''
     def __init__(self, language="en"):
@@ -453,6 +455,9 @@ else:
                               "bison","ncurses-devel", "expat-devel",
                               "python-devel", "axel", "wget"])
 
+if not os.path.exists("/usr/bin/axel"):
+    DOWNLOAD_TOOL = "wget"
+
 while True:
     if (not os.path.isfile(build_dir + "/" + gdb_name) 
         or not yes_no(lang.string('"%s" exist.  Use it without download a new one?') %(build_dir + "/" + gdb_name))):
@@ -460,7 +465,7 @@ while True:
             os.remove(build_dir + "/" + gdb_name)
         except:
             pass
-        if not call_cmd("axel http://ftp.gnu.org/gnu/gdb/" + gdb_name, lang.string("Download GDB source package failed."), "", True):
+        if not call_cmd(DOWNLOAD_TOOL + " http://ftp.gnu.org/gnu/gdb/" + gdb_name, lang.string("Download GDB source package failed."), "", True):
             continue
     shutil.rmtree(build_dir + "/gdb-" + install_version + "/", True)
     if not call_cmd("tar vxf " + gdb_name + " -C ./", lang.string("Uncompress GDB source package failed."), "", True):
