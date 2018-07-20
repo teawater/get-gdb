@@ -179,12 +179,17 @@ def get_cmd(cmd, first=True):
     return v
 
 def retry(string="", ret=-1):
+    ignore = False
     while True:
-        s = raw_input(string + lang.string(" [Retry]/Exit:"))
+        s = raw_input(string + lang.string(" [Retry]/Ignore/Exit:"))
         if len(s) == 0 or s[0] == 'r' or s[0] == 'R':
+            break
+        if s[0] == 'I' or s[0] == 'i':
+            ignore = True
             break
         if s[0] == "E" or s[0] == "e":
             exit(ret)
+    return ignore
 
 def call_cmd(cmd, fail_str="", chdir="", outside_retry=False):
     '''
@@ -196,9 +201,8 @@ def call_cmd(cmd, fail_str="", chdir="", outside_retry=False):
         os.chdir(chdir)
     while True:
         ret = os.system(cmd)
-        if ret == 0:
+        if ret == 0 or retry(fail_str, ret):
             break
-        retry(fail_str, ret)
         if outside_retry:
             return False
 
@@ -298,10 +302,8 @@ def install_packages(distro, packages, auto=False):
                 if len(s) > 0 and (s[0] == 'y' or s[0] == "Y"):
                     return
 
-        if ret == 0:
+        if ret == 0 or retry(lang.string("Install packages failed."), ret):
             break
-        else:
-            retry(lang.string("Install packages failed."), ret)
 
 def input_dir(msg, default=""):
     if default != "":
