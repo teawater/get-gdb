@@ -447,15 +447,15 @@ compile_cmd = "make -j " + str(compile_job_number) + " all"
 if distro == "Ubuntu":
     install_packages(distro, ["gcc", "texinfo", "m4", "flex", "bison",
                               "libncurses5-dev", "libexpat1-dev",
-                              "python-dev", "axel", "wget", "xz"])
+                              "python-dev", "axel", "wget", "xz", "make"])
 elif distro == "openSUSE":
     install_packages(distro, ["gcc", "texinfo", "m4", "flex",
                               "bison","ncurses-devel", "libexpat-devel",
-                              "python-devel", "axel","make", "wget", "xz"])
+                              "python-devel", "axel","make", "wget", "xz", "make"])
 else:
     install_packages(distro, ["gcc", "gcc-c++", "texinfo", "m4", "flex",
                               "bison","ncurses-devel", "expat-devel",
-                              "python-devel", "axel", "wget", "xz"])
+                              "python-devel", "axel", "wget", "xz", "make"])
 
 if not os.path.exists("/usr/bin/axel"):
     DOWNLOAD_TOOL = "wget"
