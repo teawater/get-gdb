@@ -447,7 +447,7 @@ compile_cmd = "make -j " + str(compile_job_number) + " all"
 if distro == "Ubuntu":
     install_packages(distro, ["gcc", "texinfo", "m4", "flex", "bison",
                               "libncurses5-dev", "libexpat1-dev",
-                              "python-dev", "axel", "wget", "xz", "make"])
+                              "python-dev", "axel", "wget", "xz-utils", "make"])
 elif distro == "openSUSE":
     install_packages(distro, ["gcc", "texinfo", "m4", "flex",
                               "bison","ncurses-devel", "libexpat-devel",
