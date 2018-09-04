@@ -445,7 +445,7 @@ while True:
 compile_cmd = "make -j " + str(compile_job_number) + " all"
 
 if distro == "Ubuntu":
-    install_packages(distro, ["gcc", "texinfo", "m4", "flex", "bison",
+    install_packages(distro, ["gcc", "g++", "texinfo", "m4", "flex", "bison",
                               "libncurses5-dev", "libexpat1-dev",
                               "python-dev", "axel", "wget", "xz-utils", "make"])
 elif distro == "openSUSE":
